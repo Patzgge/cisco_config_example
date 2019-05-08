@@ -1,0 +1,45 @@
+!
+crypto isakmp policy 10
+ encr aes 256
+ authentication pre-share
+ group 2
+crypto isakmp key VPN_SECRET address 0.0.0.0
+!
+!
+crypto ipsec transform-set protect-gre esp-aes 256 esp-sha-hmac
+ mode tunnel
+!
+!
+crypto ipsec profile protect-gre
+ set security-association lifetime seconds 86400
+ set transform-set protect-gre
+!
+!
+interface Loopback0
+ ip address 192.168.250.1 255.255.255.0
+!
+interface Tunnel0
+ description mGRE - DMVPN Tunnel
+ ip address 192.168.255.1 255.255.255.0
+ no ip redirects
+ no ip next-hop-self eigrp 9999
+ no ip split-horizon eigrp 9999
+ ip nhrp authentication firewall
+ ip nhrp network-id 1
+ tunnel source GigabitEthernet1
+ tunnel mode gre multipoint
+ tunnel protection ipsec profile protect-gre
+!
+interface GigabitEthernet1
+ ip address INTERFACE_IP_ADDRESS
+ negotiation auto
+ no mop enabled
+ no mop sysid
+!
+!
+router eigrp 9999
+ no default-information in
+ network 192.168.250.0
+ network 192.168.255.0
+ passive-interface GigabitEthernet1
+!
