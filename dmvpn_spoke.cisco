@@ -34,7 +34,6 @@ interface Tunnel0
  ip address 192.168.255.10 255.255.255.0
  no ip redirects
  ip mtu 1414
- ip nhrp authentication TUNNEL_SECRET
  ip nhrp map 192.168.255.1 HUB_IP_ADDRESS
  ip nhrp map multicast HUB_IP_ADDRESS
  ip nhrp network-id 9999
