@@ -1,0 +1,67 @@
+!
+crypto keyring dmvpn
+  pre-shared-key address 0.0.0.0 0.0.0.0 key VPN_SECRET
+!
+crypto isakmp policy 10
+ encr aes 256
+ authentication pre-share
+ group 5
+crypto isakmp keepalive 60 periodic
+crypto isakmp nat keepalive 60
+crypto isakmp xauth timeout 10
+
+crypto isakmp profile dmvpn
+   keyring dmvpn
+   match identity address 0.0.0.0
+!
+crypto ipsec security-association replay window-size 1024
+!
+crypto ipsec transform-set dmvpn esp-aes 256 esp-sha-hmac
+ mode transport
+crypto ipsec transform-set temp esp-aes 256 esp-sha-hmac
+ mode transport
+!
+crypto ipsec profile dmvpn
+ set transform-set dmvpn
+ set isakmp-profile dmvpn
+!
+!
+!
+!
+!
+interface Tunnel0
+ description VPN Spoke
+ ip address 192.168.255.10 255.255.255.0
+ no ip redirects
+ ip mtu 1414
+ ip nhrp authentication TUNNEL_SECRET
+ ip nhrp map 192.168.255.1 HUB_IP_ADDRESS
+ ip nhrp map multicast HUB_IP_ADDRESS
+ ip nhrp network-id 9999
+ ip nhrp holdtime 120
+ ip nhrp nhs 192.168.251.1
+ ip tcp adjust-mss 1374
+ no ip split-horizon eigrp 9999
+ load-interval 60
+ tunnel source Vlan10
+ tunnel mode gre multipoint
+ tunnel key 9999
+ tunnel protection ipsec profile dmvpn shared
+!
+!
+interface Vlan1
+ description Lan
+ ip address 192.168.10.1 255.255.255.0
+!
+interface Vlan10
+ description WAN
+ ip address dhcp
+!
+!
+router eigrp 9999
+ distribute-list EIGRP out
+ no default-information in
+ network 192.168.10.0
+ network 192.168.255.0
+ redistribute static
+!
